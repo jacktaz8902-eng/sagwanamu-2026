@@ -1,4 +1,4 @@
-$ErrorActionPreference = 'Stop'
+﻿$ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.Drawing
 $site = "C:\Users\PC2404\AppData\Local\Temp\claude\C--Users-PC2404\d059fefe-d89c-46ee-92ee-22d689f351d3\scratchpad\site"
 New-Item -ItemType Directory -Force $site | Out-Null

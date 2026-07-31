@@ -1,4 +1,4 @@
-<#
+﻿<#
   명단(build/data.json)을 암호로 암호화해 index.html 을 다시 만듭니다.
 
     powershell -ExecutionPolicy Bypass -File build\make-site.ps1 -Password 7766
