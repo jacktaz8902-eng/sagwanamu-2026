@@ -1,0 +1,5 @@
+# 개인정보가 담긴 원본은 저장소에 올리지 않습니다
+build/data.json
+build/*.tsv
+*.xlsx
+offline.html

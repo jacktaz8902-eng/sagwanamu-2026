@@ -1,0 +1,581 @@
+<style>
+  /* ===== 사과나무 연수 · 모바일 앱 =====
+     하늘 연둣빛 #EFF4D2 · 잎 #4E8F33 · 사과 #D45840 · 나무 #7A5232 */
+  :root {
+    color-scheme: light;
+    --bg: #EFF4D2; --bg-2: #E6EDC2;
+    --surface: #FFFFFF; --surface-2: #FAFBF0;
+    --ink: #3A2E1F; --muted: #6B6A4E;
+    --line: #DDE3BE; --line-2: #E9EDD5;
+    --leaf: #4E8F33; --leaf-ink: #3D7327; --leaf-soft: #E4F1CF;
+    --apple: #D45840; --apple-ink: #B94629; --apple-soft: #FBE5DD;
+    --wood: #A97C50; --wood-dark: #7A5232; --wood-ink: #FFFFFF;
+    --shadow: 0 1px 0 rgba(91,65,40,.05), 0 8px 20px -14px rgba(91,65,40,.5);
+    --shadow-lift: 0 2px 0 rgba(91,65,40,.07), 0 14px 28px -18px rgba(91,65,40,.55);
+    --sans: "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    --bar: 62px;
+    --safe-b: env(safe-area-inset-bottom, 0px);
+    --safe-t: env(safe-area-inset-top, 0px);
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #1A2016; --bg-2: #141A11; --surface: #232B1E; --surface-2: #29321F;
+    --ink: #F0F4E2; --muted: #AEB795; --line: #37432C; --line-2: #2E3925;
+    --leaf: #9AD46A; --leaf-ink: #B4E087; --leaf-soft: #2A3A1F;
+    --apple: #F5907A; --apple-ink: #FBA894; --apple-soft: #3B241C;
+    --wood: #C79A67; --wood-dark: #C79A67; --wood-ink: #23180E;
+    --shadow: 0 1px 0 rgba(0,0,0,.3), 0 8px 20px -14px rgba(0,0,0,.9);
+    --shadow-lift: 0 2px 0 rgba(0,0,0,.35), 0 14px 28px -18px rgba(0,0,0,1);
+  }
+
+  * { -webkit-tap-highlight-color: rgba(78,143,51,.15); }
+  [hidden] { display: none !important; }
+  html, body { overflow-x: hidden; overscroll-behavior-y: none; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: var(--sans); font-size: 17px; line-height: 1.55;
+    -webkit-text-size-adjust: 100%;
+  }
+  button, input { font-family: inherit; }
+
+  /* ================= 잠금 화면 ================= */
+  #lock {
+    position: fixed; inset: 0; z-index: 100; background: var(--bg);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 24px 22px calc(24px + var(--safe-b)); text-align: center;
+  }
+  #lock .mark { width: 76px; height: 76px; }
+  #lock h1 {
+    margin: 16px 0 0; font-size: 27px; font-weight: 900; letter-spacing: -.035em;
+    color: var(--wood-dark);
+  }
+  #lock h1 .a { color: var(--apple); }
+  #lock .lead { margin: 8px 0 0; font-size: 15px; font-weight: 600; color: var(--muted); max-width: 20em; }
+  #lock form { display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 330px; margin-top: 26px; }
+  #pw {
+    width: 100%; box-sizing: border-box; padding: 15px 16px; text-align: center;
+    font-size: 19px; font-weight: 700; letter-spacing: .04em;
+    color: var(--ink); background: var(--surface);
+    border: 2.5px solid var(--line); border-radius: 14px; outline: none;
+    box-shadow: var(--shadow);
+  }
+  #pw:focus { border-color: var(--leaf); box-shadow: var(--shadow), 0 0 0 4px var(--leaf-soft); }
+  #pw::placeholder { font-weight: 600; color: var(--muted); letter-spacing: 0; }
+  .btn-main {
+    padding: 15px 16px; font-size: 18px; font-weight: 800; cursor: pointer;
+    color: var(--wood-ink); background: var(--leaf-ink);
+    border: 0; border-radius: 14px; box-shadow: var(--shadow);
+  }
+  .btn-main:active { transform: translateY(1px); }
+  .btn-main:disabled { opacity: .55; }
+  #pwmsg { margin: 4px 0 0; font-size: 14px; font-weight: 700; color: var(--apple-ink); min-height: 1.4em; }
+  #lock .foot { margin-top: 28px; font-size: 12.5px; color: var(--muted); line-height: 1.7; }
+
+  /* ================= 앱 바 ================= */
+  .appbar {
+    position: sticky; top: 0; z-index: 30;
+    display: flex; align-items: center; gap: 9px;
+    padding: calc(9px + var(--safe-t)) 14px 9px;
+    background: var(--bg); border-bottom: 1.5px solid var(--line);
+  }
+  .appbar .mark { width: 26px; height: 26px; flex: 0 0 auto; }
+  .appbar .t { font-size: 16px; font-weight: 900; letter-spacing: -.03em; color: var(--wood-dark); }
+  .appbar .t .a { color: var(--apple); }
+  .mine {
+    margin-left: auto; display: none; align-items: center; gap: 5px;
+    font-size: 14px; font-weight: 800; color: var(--leaf-ink);
+    background: var(--leaf-soft); border: 2px solid var(--leaf);
+    border-radius: 999px; padding: 5px 13px; cursor: pointer;
+  }
+  .mine.on { display: inline-flex; }
+
+  /* ================= 본문 ================= */
+  .view { padding: 0 14px calc(var(--bar) + 26px + var(--safe-b)); max-width: 640px; margin: 0 auto; }
+  .stack { display: flex; flex-direction: column; gap: 14px; }
+
+  /* 랜딩 타이틀 — 검색 중이거나 카드를 보고 있을 땐 감춰서 화면을 넓게 쓴다 */
+  .hero { text-align: center; padding: 24px 0 4px; }
+  .view.busy .hero { display: none; }
+  .ribbon {
+    display: inline-block; background: var(--wood-dark); color: var(--wood-ink);
+    font-size: 13.5px; font-weight: 800; padding: 6px 18px; border-radius: 9px;
+    box-shadow: inset 0 -3px 0 rgba(0,0,0,.14);
+  }
+  .hero h2 { margin: 11px 0 0; font-size: 34px; font-weight: 900; letter-spacing: -.04em; color: var(--wood-dark); line-height: 1.1; }
+  .hero h2 .a { color: var(--apple); }
+  .hero .when {
+    display: inline-block; margin-top: 11px; font-size: 13px; font-weight: 700;
+    color: var(--wood-dark); background: var(--surface);
+    border: 2px solid var(--wood); border-radius: 999px; padding: 3px 14px;
+  }
+  .hero .tally { margin: 12px 0 0; font-size: 13px; font-weight: 600; color: var(--muted); }
+  .hero .tally b { color: var(--ink); }
+
+  /* 검색 */
+  .searchwrap { position: sticky; top: calc(44px + var(--safe-t)); z-index: 20; padding: 12px 0 10px; background: linear-gradient(var(--bg) 76%, transparent); }
+  .field { position: relative; display: flex; align-items: center; }
+  .field > svg { position: absolute; left: 15px; width: 21px; height: 21px; color: var(--leaf-ink); pointer-events: none; }
+  #q {
+    width: 100%; box-sizing: border-box; padding: 15px 46px 15px 45px;
+    font-size: 18px; font-weight: 700; color: var(--ink); background: var(--surface);
+    border: 2.5px solid var(--leaf); border-radius: 14px; box-shadow: var(--shadow-lift); outline: none;
+  }
+  #q::placeholder { font-weight: 600; color: var(--muted); opacity: 1; }
+  #q:focus { border-color: var(--apple); box-shadow: var(--shadow-lift), 0 0 0 4px var(--apple-soft); }
+  #clear {
+    position: absolute; right: 9px; width: 32px; height: 32px; display: none;
+    align-items: center; justify-content: center; border: 0; border-radius: 50%;
+    background: var(--line); color: var(--ink); font-size: 15px; cursor: pointer;
+  }
+  #clear.on { display: flex; }
+  .hint { margin: 9px 2px 0; font-size: 13px; font-weight: 600; color: var(--muted); text-align: center; }
+
+  /* 카드 */
+  .card { background: var(--surface); border: 2px solid var(--line); border-radius: 18px; box-shadow: var(--shadow); overflow: hidden; }
+
+  /* 동명이인 선택 */
+  .chooser-head { margin: 2px 0 -2px; font-size: 15px; font-weight: 700; text-align: center; }
+  .chooser-head em { font-style: normal; color: var(--apple-ink); }
+  .pick {
+    display: flex; align-items: center; gap: 11px; width: 100%; min-height: 62px;
+    padding: 13px 15px; background: none; border: 0; border-top: 2px solid var(--line-2);
+    font: inherit; color: inherit; text-align: left; cursor: pointer;
+  }
+  .pick:first-child { border-top: 0; }
+  .pick:active { background: var(--leaf-soft); }
+  .pick .nm { font-weight: 800; font-size: 19px; flex: 0 0 auto; }
+  .pick .sub2 { font-size: 13.5px; font-weight: 600; color: var(--muted); flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pick .go { color: var(--leaf); font-size: 23px; font-weight: 700; }
+
+  /* 본인 카드 */
+  .person { padding: 15px 17px 17px; }
+  .backrow { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 6px; }
+  .back { font: inherit; font-size: 14px; font-weight: 800; color: var(--muted); background: none; border: 0; padding: 4px 0; cursor: pointer; }
+  .back:active { color: var(--apple-ink); }
+  .savebtn {
+    font: inherit; font-size: 13.5px; font-weight: 800; cursor: pointer;
+    color: var(--leaf-ink); background: var(--leaf-soft);
+    border: 2px solid var(--leaf); border-radius: 999px; padding: 6px 13px;
+  }
+  .savebtn.saved { color: var(--muted); background: var(--surface-2); border-color: var(--line); }
+  .pname { margin: 0; font-size: 34px; font-weight: 900; letter-spacing: -.04em; line-height: 1.1; }
+  .meta { margin: 9px 0 0; display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { font-size: 13px; font-weight: 700; padding: 4px 11px; border-radius: 999px; background: var(--surface-2); border: 2px solid var(--line); }
+  .chip.seqchip { color: var(--muted); }
+
+  .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; margin-top: 16px; }
+  .tile { border-radius: 15px; padding: 13px 14px 12px; border: 2.5px solid; }
+  .t-team { background: var(--leaf-soft); border-color: var(--leaf); }
+  .t-room { background: var(--apple-soft); border-color: var(--apple); }
+  .tile .lab { display: flex; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 800; }
+  .tile .lab svg { width: 15px; height: 15px; }
+  .t-team .lab { color: var(--leaf-ink); }
+  .t-room .lab { color: var(--apple-ink); }
+  .tile .big { display: block; font-size: 42px; line-height: 1.05; font-weight: 900; letter-spacing: -.045em; margin-top: 2px; }
+  .t-team .big { color: var(--leaf-ink); }
+  .t-room .big { color: var(--apple-ink); }
+  .tile .big span { font-size: 18px; font-weight: 800; margin-left: 3px; letter-spacing: 0; }
+  .tile .note { display: block; font-size: 12px; font-weight: 600; color: var(--muted); margin-top: 3px; }
+
+  /* 명단 */
+  .sec-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 2px 4px 8px; }
+  .sec-title { margin: 0; font-size: 16.5px; font-weight: 800; letter-spacing: -.02em; display: flex; align-items: center; gap: 6px; }
+  .sec-title svg { width: 17px; height: 17px; flex: 0 0 auto; }
+  .st-room { color: var(--apple-ink); }
+  .st-team { color: var(--leaf-ink); }
+  .sec-count { font-size: 12.5px; font-weight: 700; color: var(--muted); white-space: nowrap; }
+
+  .row { display: flex; align-items: center; gap: 10px; padding: 12px 14px; min-height: 60px; box-sizing: border-box; border-top: 2px solid var(--line-2); }
+  .row:first-child { border-top: 0; }
+  .row .idx { font-size: 12.5px; font-weight: 700; color: var(--muted); width: 25px; flex: 0 0 25px; }
+  .row .body { flex: 1 1 auto; min-width: 0; }
+  .row .nm { font-weight: 800; font-size: 17.5px; letter-spacing: -.02em; }
+  .row .sub2 { font-size: 13px; font-weight: 600; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .row .tag { flex: 0 0 auto; font-size: 13px; font-weight: 800; padding: 5px 10px; border-radius: 9px; border: 2px solid; }
+  .tag.g-room { background: var(--apple-soft); color: var(--apple-ink); border-color: var(--apple); }
+  .tag.g-team { background: var(--leaf-soft); color: var(--leaf-ink); border-color: var(--leaf); }
+  .row.me { background: var(--leaf-soft); }
+  .row.me .idx, .row.me .sub2 { color: var(--leaf-ink); }
+  .row.me .nm::after {
+    content: "나"; margin-left: 7px; font-size: 11.5px; font-weight: 900;
+    background: var(--apple); color: var(--wood-ink); padding: 3px 8px; border-radius: 999px; vertical-align: 2px;
+  }
+  a.row { color: inherit; text-decoration: none; }
+  a.row:active { background: var(--surface-2); }
+  a.row.me:active { background: var(--leaf-soft); }
+
+  /* 전체 보기 */
+  .browse-top { padding: 16px 2px 10px; }
+  .browse-top h2 { margin: 0; font-size: 21px; font-weight: 900; letter-spacing: -.03em; }
+  .browse-top p { margin: 4px 0 0; font-size: 13.5px; font-weight: 600; color: var(--muted); }
+  details { border-top: 2px solid var(--line-2); }
+  details:first-of-type { border-top: 0; }
+  summary { display: flex; align-items: center; gap: 9px; cursor: pointer; padding: 15px 15px; min-height: 54px; box-sizing: border-box; font-weight: 800; font-size: 17px; list-style: none; }
+  summary::-webkit-details-marker { display: none; }
+  summary .who { font-weight: 600; font-size: 13px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  summary::after { content: ""; margin-left: auto; flex: 0 0 auto; width: 10px; height: 10px; border-right: 3px solid var(--muted); border-bottom: 3px solid var(--muted); transform: rotate(45deg) translate(-3px,-3px); border-radius: 2px; }
+  details[open] summary { color: var(--leaf-ink); }
+  details[open] summary::after { transform: rotate(-135deg) translate(-3px,-3px); }
+  .det-body { border-top: 2px solid var(--line-2); background: var(--surface-2); }
+
+  .empty { padding: 32px 18px; text-align: center; color: var(--muted); font-size: 15.5px; font-weight: 600; }
+  .empty b { color: var(--apple-ink); }
+  .note-foot { margin: 18px 2px 0; font-size: 12px; color: var(--muted); text-align: center; line-height: 1.7; }
+
+  /* ================= 하단 탭 바 ================= */
+  .tabbar {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 40;
+    display: flex; background: var(--surface);
+    border-top: 2px solid var(--line);
+    padding-bottom: var(--safe-b);
+    box-shadow: 0 -6px 18px -14px rgba(91,65,40,.6);
+  }
+  .tabbar button {
+    flex: 1 1 0; min-height: var(--bar);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+    background: none; border: 0; cursor: pointer;
+    font-size: 11.5px; font-weight: 800; color: var(--muted); letter-spacing: -.01em;
+  }
+  .tabbar button svg { width: 23px; height: 23px; }
+  .tabbar button[aria-selected="true"] { color: var(--leaf-ink); }
+  .tabbar button:active { background: var(--surface-2); }
+
+  @media (min-width: 700px) {
+    .tabbar { max-width: 640px; margin: 0 auto; border-radius: 20px 20px 0 0; border: 2px solid var(--line); border-bottom: 0; }
+  }
+  @media (max-width: 360px) {
+    .hero h2 { font-size: 29px; }
+    .pname { font-size: 30px; }
+    .tile .big { font-size: 37px; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+
+<div id="lock">
+  <svg class="mark" viewBox="0 0 64 64" aria-hidden="true">
+    <path fill="#4E8F33" d="M33 20c0-7 5-12 12-13 1 8-4 13-10 14z"/>
+    <path fill="#7A5232" d="M30 22c0-5 1-9 3-12l3 1c-2 3-3 6-3 11z"/>
+    <path fill="#D45840" d="M32 18c3-2 6-3 9-3 8 0 14 7 14 17 0 13-9 27-17 27-3 0-5-2-8-2s-5 2-8 2C14 59 5 45 5 32c0-10 6-17 14-17 3 0 6 1 9 3z"/>
+  </svg>
+  <h1><span class="a">사과</span>나무 연수</h1>
+  <p class="lead">2026 특수교육지도사 사과나무 연수<br>조 편성 · 숙소 조회</p>
+  <form id="pwform" autocomplete="off">
+    <input id="pw" type="password" inputmode="text" autocomplete="off" autocapitalize="off"
+           spellcheck="false" placeholder="입장 암호" aria-label="입장 암호">
+    <button class="btn-main" type="submit" id="pwbtn">들어가기</button>
+    <p id="pwmsg" role="status"></p>
+  </form>
+  <p class="foot">연수 안내와 함께 전달받은 암호를 입력하세요.<br>개인정보 보호를 위해 명단은 암호로 잠겨 있습니다.</p>
+</div>
+
+<div id="app" hidden>
+  <div class="appbar">
+    <svg class="mark" viewBox="0 0 64 64" aria-hidden="true">
+      <path fill="#4E8F33" d="M33 20c0-7 5-12 12-13 1 8-4 13-10 14z"/>
+      <path fill="#D45840" d="M32 18c3-2 6-3 9-3 8 0 14 7 14 17 0 13-9 27-17 27-3 0-5-2-8-2s-5 2-8 2C14 59 5 45 5 32c0-10 6-17 14-17 3 0 6 1 9 3z"/>
+    </svg>
+    <span class="t"><span class="a">사과</span>나무 연수</span>
+    <button class="mine" id="mineBtn" type="button"></button>
+  </div>
+
+  <main class="view" id="view"></main>
+
+  <nav class="tabbar" role="tablist">
+    <button role="tab" id="tab-find" aria-selected="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/></svg>
+      내 정보 찾기
+    </button>
+    <button role="tab" id="tab-team" aria-selected="false">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 3C10.4 3 4.4 7.8 4.4 14.6c0 1.9.6 3.6 1.5 4.9L4 21.4 5.4 22.8l1.9-1.9c1.3 1 3 1.5 4.9 1.5 6.8 0 9.8-6.6 9.8-16V3H20zM18.9 6.6C18.2 13 14.4 17.9 9.3 19.4c1.4-5.5 5-10.1 9.6-12.8z"/></svg>
+      조별 명단
+    </button>
+    <button role="tab" id="tab-room" aria-selected="false">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.6 5.4C13 3.5 14.6 2 16.6 2c0 2-1.4 3.6-3.2 4v.6c1-.5 2.1-.8 3-.8 2.7 0 5 2.6 5 6.2 0 4.6-3.2 10-6 10-1.1 0-1.9-.6-3-.6s-1.9.6-3 .6c-2.8 0-6-5.4-6-10C3.4 8.4 5.7 5.8 8.4 5.8c1 0 2.1.3 3.1.8z"/></svg>
+      호실 배정
+    </button>
+  </nav>
+</div>
+
+<script>
+const PAYLOAD = /*__PAYLOAD__*/;
+
+/* ================= 잠금 해제 ================= */
+const LS_PW = "sgn26.pw", LS_ME = "sgn26.me";
+const lock = document.getElementById("lock");
+const app = document.getElementById("app");
+const pwForm = document.getElementById("pwform");
+const pwInput = document.getElementById("pw");
+const pwBtn = document.getElementById("pwbtn");
+const pwMsg = document.getElementById("pwmsg");
+
+const b64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+
+async function decryptPayload(pw) {
+  const enc = new TextEncoder();
+  const km = await crypto.subtle.importKey("raw", enc.encode(pw), "PBKDF2", false, ["deriveKey"]);
+  const key = await crypto.subtle.deriveKey(
+    { name: "PBKDF2", salt: b64(PAYLOAD.salt), iterations: PAYLOAD.iter, hash: "SHA-256" },
+    km, { name: "AES-CBC", length: 256 }, false, ["decrypt"]);
+  const buf = await crypto.subtle.decrypt({ name: "AES-CBC", iv: b64(PAYLOAD.iv) }, key, b64(PAYLOAD.ct));
+  const sum = [...new Uint8Array(await crypto.subtle.digest("SHA-256", buf))]
+    .map(x => x.toString(16).padStart(2, "0")).join("");
+  if (sum !== PAYLOAD.sum) throw new Error("checksum");
+  return JSON.parse(new TextDecoder().decode(buf));
+}
+
+let PEOPLE = [];
+
+async function unlock(pw, fromStore) {
+  pwBtn.disabled = true;
+  pwMsg.textContent = fromStore ? "" : "확인 중…";
+  try {
+    PEOPLE = await decryptPayload(pw.trim());
+    try { localStorage.setItem(LS_PW, pw.trim()); } catch (e) {}
+    lock.remove();
+    app.hidden = false;
+    start();
+  } catch (e) {
+    pwBtn.disabled = false;
+    if (fromStore) { pwMsg.textContent = ""; return; }
+    pwMsg.textContent = "암호가 맞지 않습니다. 다시 입력해 주세요.";
+    pwInput.value = ""; pwInput.focus();
+  }
+}
+
+pwForm.addEventListener("submit", e => { e.preventDefault(); if (pwInput.value.trim()) unlock(pwInput.value, false); });
+
+/* boot() 는 아래 앱 코드의 선언이 모두 끝난 뒤(스크립트 맨 끝) 호출한다 */
+function boot() {
+  if (PAYLOAD.mode === "plain") {
+    PEOPLE = PAYLOAD.data; lock.remove(); app.hidden = false; start(); return;
+  }
+  if (!window.crypto || !crypto.subtle) {
+    pwMsg.textContent = "이 브라우저에서는 열 수 없습니다. 주소가 https 로 시작하는지 확인해 주세요.";
+    pwBtn.disabled = true; return;
+  }
+  let saved = null;
+  try { saved = localStorage.getItem(LS_PW); } catch (e) {}
+  if (saved) unlock(saved, true);
+}
+
+/* ================= 앱 ================= */
+const ICON_LEAF = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20 3C10.4 3 4.4 7.8 4.4 14.6c0 1.9.6 3.6 1.5 4.9L4 21.4 5.4 22.8l1.9-1.9c1.3 1 3 1.5 4.9 1.5 6.8 0 9.8-6.6 9.8-16V3H20zM18.9 6.6C18.2 13 14.4 17.9 9.3 19.4c1.4-5.5 5-10.1 9.6-12.8z"/></svg>';
+const ICON_APPLE = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12.6 5.4C13 3.5 14.6 2 16.6 2c0 2-1.4 3.6-3.2 4v.6c1-.5 2.1-.8 3-.8 2.7 0 5 2.6 5 6.2 0 4.6-3.2 10-6 10-1.1 0-1.9-.6-3-.6s-1.9.6-3 .6c-2.8 0-6-5.4-6-10C3.4 8.4 5.7 5.8 8.4 5.8c1 0 2.1.3 3.1.8z"/></svg>';
+const CHO = "ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ";
+const choseong = s => [...s].map(ch => {
+  const c = ch.charCodeAt(0) - 0xAC00;
+  return (c >= 0 && c <= 11171) ? CHO[Math.floor(c / 588)] : ch;
+}).join("");
+const norm = s => s.replace(/\s+/g, "").toLowerCase();
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const teamNo = t => parseInt(t, 10);
+
+let byTeam, byRoom, teamKeys, roomKeys;
+const view = document.getElementById("view");
+const mineBtn = document.getElementById("mineBtn");
+const tabs = { find: document.getElementById("tab-find"), team: document.getElementById("tab-team"), room: document.getElementById("tab-room") };
+let tab = "find";
+let myId = null;        // 저장해 둔 본인
+let shownSeq = null;    // 지금 보고 있는 사람
+let openMine = true;    // 찾기 탭에 들어올 때 내 카드를 자동으로 열지
+
+function start() {
+  PEOPLE.forEach(p => {
+    p.regionName = p.region.replace(/^\d+\.\s*/, "");
+    p.nName = norm(p.name); p.nOrg = norm(p.org); p.nRegion = norm(p.regionName);
+    p.cho = choseong(p.nName); p.choOrg = choseong(p.nOrg);
+  });
+  byTeam = new Map(); byRoom = new Map();
+  for (const p of PEOPLE) {
+    if (!byTeam.has(p.team)) byTeam.set(p.team, []);
+    if (!byRoom.has(p.room)) byRoom.set(p.room, []);
+    byTeam.get(p.team).push(p); byRoom.get(p.room).push(p);
+  }
+  teamKeys = [...byTeam.keys()].sort((a, b) => teamNo(a) - teamNo(b));
+  roomKeys = [...byRoom.keys()].sort((a, b) => (+a) - (+b));
+  try { myId = JSON.parse(localStorage.getItem(LS_ME)); } catch (e) {}
+  if (!PEOPLE.some(p => p.seq === myId)) myId = null;
+  paintMine();
+  Object.entries(tabs).forEach(([k, b]) => b.addEventListener("click", () => { if (k === "find") openMine = true; go(k); }));
+  mineBtn.addEventListener("click", () => { openMine = true; go("find"); });
+  go("find");
+}
+
+function paintMine() {
+  const me = PEOPLE.find(p => p.seq === myId);
+  mineBtn.classList.toggle("on", !!me);
+  if (me) mineBtn.textContent = me.name + " · " + me.team;
+}
+
+function go(next) {
+  tab = next;
+  Object.entries(tabs).forEach(([k, b]) => b.setAttribute("aria-selected", String(k === next)));
+  if (next === "find") renderFind();
+  else renderBrowse(next);
+  window.scrollTo(0, 0);
+}
+
+/* ---------- 공통 조각 ---------- */
+function rowHTML(p, me, tagKind) {
+  const tag = tagKind === "room"
+    ? `<span class="tag g-room">${p.room}호</span>`
+    : `<span class="tag g-team">${esc(p.team)}</span>`;
+  return `<a class="row${p.seq === me ? " me" : ""}" href="#" data-seq="${p.seq}">
+      <span class="idx">${p.seq}</span>
+      <span class="body"><span class="nm">${esc(p.name)}</span>
+        <span class="sub2">${esc(p.regionName)} · ${esc(p.org)}</span></span>
+      ${tag}</a>`;
+}
+
+function personHTML(p) {
+  const team = byTeam.get(p.team), room = byRoom.get(p.room);
+  const saved = p.seq === myId;
+  return `<div class="card"><div class="person">
+      <div class="backrow">
+        <button class="back" type="button" data-act="back">← 다른 사람 찾기</button>
+        <button class="savebtn${saved ? " saved" : ""}" type="button" data-act="save">${saved ? "✓ 내 정보로 저장됨" : "이 사람이 나예요"}</button>
+      </div>
+      <h2 class="pname">${esc(p.name)}</h2>
+      <p class="meta">
+        <span class="chip">${esc(p.regionName)}</span>
+        <span class="chip">${esc(p.org)}</span>
+        <span class="chip">${esc(p.pub)} · ${esc(p.lvl)}</span>
+        <span class="chip seqchip">명단 ${p.seq}번</span>
+      </p>
+      <div class="tiles">
+        <div class="tile t-team"><span class="lab">${ICON_LEAF} 우리 조</span>
+          <span class="big">${teamNo(p.team)}<span>조</span></span>
+          <span class="note">${team.length}명 편성</span></div>
+        <div class="tile t-room"><span class="lab">${ICON_APPLE} 숙소</span>
+          <span class="big">${p.room}<span>호실</span></span>
+          <span class="note">${esc(p.roomKind)}</span></div>
+      </div>
+    </div></div>
+    <section>
+      <div class="sec-head"><h3 class="sec-title st-room">${ICON_APPLE}같은 방 · ${p.room}호실</h3><span class="sec-count">3인 1실</span></div>
+      <div class="card">${room.map(x => rowHTML(x, p.seq, "team")).join("")}</div>
+    </section>
+    <section>
+      <div class="sec-head"><h3 class="sec-title st-team">${ICON_LEAF}같은 조 · ${esc(p.team)}</h3><span class="sec-count">${team.length}명 · 호실 표시</span></div>
+      <div class="card">${team.map(x => rowHTML(x, p.seq, "room")).join("")}</div>
+    </section>`;
+}
+
+/* ---------- 탭 1 : 찾기 ---------- */
+const SEARCH_UI = `
+  <div class="searchwrap">
+    <label class="field">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/></svg>
+      <input id="q" type="search" inputmode="search" autocomplete="off" autocapitalize="off" spellcheck="false"
+             placeholder="이름을 입력하세요" aria-label="이름·소속·지역 검색">
+      <button id="clear" type="button" aria-label="지우기">✕</button>
+    </label>
+    <p class="hint">이름 · 학교명 · 지역 · “7조” · “19호”</p>
+  </div>`;
+
+function renderFind() {
+  view.classList.remove("busy");
+  const me = openMine ? PEOPLE.find(p => p.seq === myId) : null;
+  view.innerHTML = `${myId ? "" : `<div class="hero">
+      <span class="ribbon">2026 특수교육지도사</span>
+      <h2><span class="a">사과</span>나무 연수</h2>
+      <span class="when">1박 2일 · 08.10 ~ 08.11</span>
+      <p class="tally">대상자 <b>150</b>명 · <b>15</b>개 조 · 숙소 <b>50</b>실</p>
+    </div>`}${SEARCH_UI}<div class="stack" id="out" aria-live="polite"></div>
+    <p class="note-foot">조 편성 및 숙소 배정은 운영 사정에 따라 변경될 수 있습니다.</p>`;
+  const input = view.querySelector("#q"), clearBtn = view.querySelector("#clear");
+  input.addEventListener("input", () => paintOut(input.value, clearBtn));
+  clearBtn.addEventListener("click", () => { input.value = ""; paintOut("", clearBtn); input.focus(); });
+  if (me) showPerson(me.seq); else { shownSeq = null; paintOut("", clearBtn); }
+}
+
+function search(raw) {
+  const q = raw.trim(); if (!q) return [];
+  const n = norm(q);
+  const mt = n.match(/^(\d{1,2})조$/); if (mt) return (byTeam.get(mt[1] + "조") || []).slice();
+  const mr = n.match(/^(\d{1,2})(호|호실)$/); if (mr) return (byRoom.get(String(+mr[1])) || []).slice();
+  if (/^[ㄱ-ㅎ]+$/.test(n)) return PEOPLE.filter(p => p.cho.includes(n) || p.choOrg.includes(n));
+  const exact = PEOPLE.filter(p => p.nName === n); if (exact.length) return exact;
+  return PEOPLE.filter(p => p.nName.includes(n) || p.nOrg.includes(n) || p.nRegion.includes(n) || p.region.includes(n));
+}
+
+function paintOut(q, clearBtn) {
+  const out = view.querySelector("#out");
+  clearBtn.classList.toggle("on", q.trim().length > 0);
+  view.classList.toggle("busy", q.trim().length > 0);
+  if (!q.trim()) {
+    shownSeq = null;
+    out.innerHTML = `<div class="card"><p class="empty">이름을 입력하면<br><b>내 조와 숙소 호실</b>이 바로 나옵니다.</p></div>`;
+    return;
+  }
+  const res = search(q);
+  shownSeq = res.length === 1 ? res[0].seq : null;
+  if (!res.length) {
+    out.innerHTML = `<div class="card"><p class="empty">‘<b>${esc(q.trim())}</b>’ 검색 결과가 없습니다.<br>이름 전체 또는 학교명으로 찾아보세요.</p></div>`;
+  } else if (res.length === 1) {
+    out.innerHTML = personHTML(res[0]);
+  } else {
+    out.innerHTML = `<p class="chooser-head"><em>‘${esc(q.trim())}’</em> 검색 결과 ${res.length}명 — 본인을 선택하세요</p>
+      <div class="card">${res.map(p => `<button class="pick" type="button" data-seq="${p.seq}">
+        <span class="nm">${esc(p.name)}</span>
+        <span class="sub2">${esc(p.regionName)} · ${esc(p.org)} · ${esc(p.team)} · ${p.room}호</span>
+        <span class="go">›</span></button>`).join("")}</div>`;
+  }
+}
+
+function showPerson(seq) {
+  const p = PEOPLE.find(x => x.seq === seq); if (!p) return;
+  if (tab !== "find") { openMine = false; go("find"); }
+  const out = view.querySelector("#out");
+  const input = view.querySelector("#q");
+  if (input) { input.value = ""; view.querySelector("#clear").classList.remove("on"); }
+  shownSeq = seq;
+  view.classList.add("busy");
+  out.innerHTML = personHTML(p);
+  window.scrollTo(0, 0);
+}
+
+/* ---------- 탭 2·3 : 전체 명단 ---------- */
+function renderBrowse(mode) {
+  const isTeam = mode === "team";
+  const keys = isTeam ? teamKeys : roomKeys, map = isTeam ? byTeam : byRoom;
+  view.innerHTML = `<div class="browse-top">
+      <h2>${isTeam ? "조별 명단" : "호실 배정"}</h2>
+      <p>${isTeam ? "15개 조 · 조당 10명" : "50실 · 3인 1실"} — 항목을 눌러 펼쳐 보세요</p>
+    </div>
+    <div class="card">${keys.map(k => {
+      const list = map.get(k);
+      const regions = [...new Set(list.map(p => p.regionName))].join(", ");
+      const who = isTeam ? `${list.length}명 · ${regions}` : `${regions} · ${[...new Set(list.map(p => p.team))].join(", ")}`;
+      return `<details><summary>${esc(isTeam ? k : k + "호실")} <span class="who">${esc(who)}</span></summary>
+        <div class="det-body">${list.map(p => rowHTML(p, myId, isTeam ? "room" : "team")).join("")}</div></details>`;
+    }).join("")}</div>
+    <p class="note-foot">조 편성 및 숙소 배정은 운영 사정에 따라 변경될 수 있습니다.</p>`;
+}
+
+/* ---------- 이벤트 위임 ---------- */
+view.addEventListener("click", e => {
+  const rowEl = e.target.closest("a.row, .pick");
+  if (rowEl) { e.preventDefault(); showPerson(+rowEl.dataset.seq); return; }
+  const act = e.target.closest("[data-act]");
+  if (!act) return;
+  if (act.dataset.act === "back") {
+    openMine = false;
+    renderFind();
+    const input = view.querySelector("#q"); if (input) input.focus();
+  } else if (act.dataset.act === "save") {
+    if (shownSeq === myId) {            // 저장 해제
+      myId = null;
+      try { localStorage.removeItem(LS_ME); } catch (e2) {}
+      act.classList.remove("saved"); act.textContent = "이 사람이 나예요";
+    } else {                            // 본인으로 저장
+      myId = shownSeq;
+      try { localStorage.setItem(LS_ME, String(myId)); } catch (e2) {}
+      act.classList.add("saved"); act.textContent = "✓ 내 정보로 저장됨";
+    }
+    paintMine();
+  }
+});
+
+boot();
+</script>

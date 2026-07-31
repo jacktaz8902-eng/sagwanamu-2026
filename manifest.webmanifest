@@ -1,0 +1,16 @@
+{
+  "name": "2026 사과나무 연수 · 조/숙소 찾기",
+  "short_name": "사과나무 연수",
+  "description": "2026 특수교육지도사 사과나무 연수 조 편성 및 숙소 배정 조회",
+  "lang": "ko",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#EFF4D2",
+  "theme_color": "#EFF4D2",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
