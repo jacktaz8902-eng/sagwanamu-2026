@@ -449,11 +449,11 @@ function personHTML(p) {
           <span class="note">${team.length}명 편성</span></div>
         <div class="tile t-room"><span class="lab">${ICON_APPLE} 숙소</span>
           <span class="big">${roomNum(p.roomNo)}<span>호</span></span>
-          <span class="note">${esc(p.roomKind)}</span></div>
+          <span class="note">3인 1실</span></div>
       </div>
     </div></div>
     <section>
-      <div class="sec-head"><h3 class="sec-title st-room">${ICON_APPLE}같은 방 · ${esc(p.roomNo)}</h3><span class="sec-count">3인 1실</span></div>
+      <div class="sec-head"><h3 class="sec-title st-room">${ICON_APPLE}같은 방 · ${esc(p.roomNo)}</h3><span class="sec-count">조 표시</span></div>
       <div class="card">${room.map(x => rowHTML(x, p.seq, "team")).join("")}</div>
     </section>
     <section>
