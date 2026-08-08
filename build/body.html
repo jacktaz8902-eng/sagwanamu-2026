@@ -372,7 +372,8 @@ const teamNo = t => parseInt(t, 10);
 const roomNum = r => parseInt(String(r).replace(/\D/g, ""), 10);   // "216호" -> 216
 
 let byTeam, byRoom, teamKeys, roomKeys;
-let dupNames = new Set();   // 동명이인 — 명단에서는 이 사람만 학교명을 함께 표시
+/* 학교(org)는 데이터 단계에서 동명이인 10명분만 남겨둔다.
+   그래서 화면에서는 org 가 있으면 곧 '구분이 필요한 사람' 이라는 뜻이다. */
 const view = document.getElementById("view");
 const mineBtn = document.getElementById("mineBtn");
 const tabs = { find: document.getElementById("tab-find"), team: document.getElementById("tab-team"), room: document.getElementById("tab-room") };
@@ -384,8 +385,8 @@ let openMine = true;    // 찾기 탭에 들어올 때 내 카드를 자동으�
 function start() {
   PEOPLE.forEach(p => {
     p.regionName = p.region.replace(/^\d+\.\s*/, "");
-    p.nName = norm(p.name); p.nOrg = norm(p.org); p.nRegion = norm(p.regionName);
-    p.cho = choseong(p.nName); p.choOrg = choseong(p.nOrg);
+    p.nName = norm(p.name); p.nRegion = norm(p.regionName);
+    p.cho = choseong(p.nName);
   });
   byTeam = new Map(); byRoom = new Map();
   for (const p of PEOPLE) {
@@ -395,9 +396,6 @@ function start() {
   }
   teamKeys = [...byTeam.keys()].sort((a, b) => teamNo(a) - teamNo(b));
   roomKeys = [...byRoom.keys()].sort((a, b) => roomNum(a) - roomNum(b));
-  const seen = new Map();
-  for (const p of PEOPLE) seen.set(p.name, (seen.get(p.name) || 0) + 1);
-  dupNames = new Set([...seen].filter(([, n]) => n > 1).map(([nm]) => nm));
   try { myId = JSON.parse(localStorage.getItem(LS_ME)); } catch (e) {}
   if (!PEOPLE.some(p => p.seq === myId)) myId = null;
   paintMine();
@@ -426,7 +424,7 @@ function rowHTML(p, me, tagKind) {
     ? `<span class="tag g-room">${esc(p.roomNo)}</span>`
     : `<span class="tag g-team">${esc(p.team)}</span>`;
   // 명단에는 이름만. 동명이인일 때만 학교명을 덧붙여 구분한다.
-  const sub = dupNames.has(p.name) ? `<span class="sub2">${esc(p.org)}</span>` : "";
+  const sub = p.org ? `<span class="sub2">${esc(p.org)}</span>` : "";
   return `<a class="row${p.seq === me ? " me" : ""}" href="#" data-seq="${p.seq}">
       <span class="body"><span class="nm">${esc(p.name)}</span>${sub}</span>
       ${tag}</a>`;
@@ -443,7 +441,7 @@ function personHTML(p) {
       <h2 class="pname">${esc(p.name)}</h2>
       <p class="meta">
         <span class="chip">${esc(p.regionName)}</span>
-        <span class="chip">${esc(p.org)}</span>
+        ${p.org ? `<span class="chip">${esc(p.org)}</span>` : ""}
         <span class="chip">${esc(p.pub)} · ${esc(p.lvl)}</span>
         <span class="chip seqchip">명단 ${p.seq}번</span>
       </p>
@@ -472,10 +470,10 @@ const SEARCH_UI = `
     <label class="field">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/></svg>
       <input id="q" type="search" inputmode="search" autocomplete="off" autocapitalize="off" spellcheck="false"
-             placeholder="이름을 입력하세요" aria-label="이름·소속·지역 검색">
+             placeholder="이름을 입력하세요" aria-label="이름·지역 검색">
       <button id="clear" type="button" aria-label="지우기">✕</button>
     </label>
-    <p class="hint">이름 · 학교명 · 지역 · “7조” · “310호”</p>
+    <p class="hint">이름 · 지역 · “7조” · “310호”</p>
   </div>`;
 
 function renderFind() {
@@ -499,9 +497,9 @@ function search(raw) {
   const n = norm(q);
   const mt = n.match(/^(\d{1,2})조$/); if (mt) return (byTeam.get(mt[1] + "조") || []).slice();
   const mr = n.match(/^(\d{3})(호|호실)?$/); if (mr) return (byRoom.get(mr[1] + "호") || []).slice();
-  if (/^[ㄱ-ㅎ]+$/.test(n)) return PEOPLE.filter(p => p.cho.includes(n) || p.choOrg.includes(n));
+  if (/^[ㄱ-ㅎ]+$/.test(n)) return PEOPLE.filter(p => p.cho.includes(n));
   const exact = PEOPLE.filter(p => p.nName === n); if (exact.length) return exact;
-  return PEOPLE.filter(p => p.nName.includes(n) || p.nOrg.includes(n) || p.nRegion.includes(n) || p.region.includes(n));
+  return PEOPLE.filter(p => p.nName.includes(n) || p.nRegion.includes(n) || p.region.includes(n));
 }
 
 function paintOut(q, clearBtn) {
@@ -516,14 +514,14 @@ function paintOut(q, clearBtn) {
   const res = search(q);
   shownSeq = res.length === 1 ? res[0].seq : null;
   if (!res.length) {
-    out.innerHTML = `<div class="card"><p class="empty">‘<b>${esc(q.trim())}</b>’ 검색 결과가 없습니다.<br>이름 전체 또는 학교명으로 찾아보세요.</p></div>`;
+    out.innerHTML = `<div class="card"><p class="empty">‘<b>${esc(q.trim())}</b>’ 검색 결과가 없습니다.<br>이름 전체를 입력해 보세요.</p></div>`;
   } else if (res.length === 1) {
     out.innerHTML = personHTML(res[0]);
   } else {
     out.innerHTML = `<p class="chooser-head"><em>‘${esc(q.trim())}’</em> 검색 결과 ${res.length}명 — 본인을 선택하세요</p>
       <div class="card">${res.map(p => `<button class="pick" type="button" data-seq="${p.seq}">
         <span class="nm">${esc(p.name)}</span>
-        <span class="sub2">${esc(p.org)} · ${esc(p.team)} · ${esc(p.roomNo)}</span>
+        <span class="sub2">${p.org ? esc(p.org) + " · " : ""}${esc(p.team)} · ${esc(p.roomNo)}</span>
         <span class="go">›</span></button>`).join("")}</div>`;
   }
 }
