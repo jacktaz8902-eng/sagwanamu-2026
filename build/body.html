@@ -384,8 +384,7 @@ let openMine = true;    // 찾기 탭에 들어올 때 내 카드를 자동으�
 
 function start() {
   PEOPLE.forEach(p => {
-    p.regionName = p.region.replace(/^\d+\.\s*/, "");
-    p.nName = norm(p.name); p.nRegion = norm(p.regionName);
+    p.nName = norm(p.name);
     p.cho = choseong(p.nName);
   });
   byTeam = new Map(); byRoom = new Map();
@@ -440,7 +439,6 @@ function personHTML(p) {
       </div>
       <h2 class="pname">${esc(p.name)}</h2>
       <p class="meta">
-        <span class="chip">${esc(p.regionName)}</span>
         ${p.org ? `<span class="chip">${esc(p.org)}</span>` : ""}
         <span class="chip">${esc(p.pub)} · ${esc(p.lvl)}</span>
         <span class="chip seqchip">명단 ${p.seq}번</span>
@@ -470,10 +468,10 @@ const SEARCH_UI = `
     <label class="field">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/></svg>
       <input id="q" type="search" inputmode="search" autocomplete="off" autocapitalize="off" spellcheck="false"
-             placeholder="이름을 입력하세요" aria-label="이름·지역 검색">
+             placeholder="이름을 입력하세요" aria-label="이름 검색">
       <button id="clear" type="button" aria-label="지우기">✕</button>
     </label>
-    <p class="hint">이름 · 지역 · “7조” · “310호”</p>
+    <p class="hint">이름 · 초성 · “7조” · “310호”</p>
   </div>`;
 
 function renderFind() {
@@ -499,7 +497,7 @@ function search(raw) {
   const mr = n.match(/^(\d{3})(호|호실)?$/); if (mr) return (byRoom.get(mr[1] + "호") || []).slice();
   if (/^[ㄱ-ㅎ]+$/.test(n)) return PEOPLE.filter(p => p.cho.includes(n));
   const exact = PEOPLE.filter(p => p.nName === n); if (exact.length) return exact;
-  return PEOPLE.filter(p => p.nName.includes(n) || p.nRegion.includes(n) || p.region.includes(n));
+  return PEOPLE.filter(p => p.nName.includes(n));
 }
 
 function paintOut(q, clearBtn) {
