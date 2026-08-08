@@ -190,7 +190,7 @@
   .row .idx { font-size: 12.5px; font-weight: 700; color: var(--muted); width: 25px; flex: 0 0 25px; }
   .row .body { flex: 1 1 auto; min-width: 0; }
   .row .nm { font-weight: 800; font-size: 17.5px; letter-spacing: -.02em; }
-  .row .sub2 { font-size: 13px; font-weight: 600; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .row .sub2 { margin-left: 8px; font-size: 13px; font-weight: 600; color: var(--muted); }
   .row .tag { flex: 0 0 auto; font-size: 13px; font-weight: 800; padding: 5px 10px; border-radius: 9px; border: 2px solid; }
   .tag.g-room { background: var(--apple-soft); color: var(--apple-ink); border-color: var(--apple); }
   .tag.g-team { background: var(--leaf-soft); color: var(--leaf-ink); border-color: var(--leaf); }
@@ -372,6 +372,7 @@ const teamNo = t => parseInt(t, 10);
 const roomNum = r => parseInt(String(r).replace(/\D/g, ""), 10);   // "216호" -> 216
 
 let byTeam, byRoom, teamKeys, roomKeys;
+let dupNames = new Set();   // 동명이인 — 명단에서는 이 사람만 학교명을 함께 표시
 const view = document.getElementById("view");
 const mineBtn = document.getElementById("mineBtn");
 const tabs = { find: document.getElementById("tab-find"), team: document.getElementById("tab-team"), room: document.getElementById("tab-room") };
@@ -394,6 +395,9 @@ function start() {
   }
   teamKeys = [...byTeam.keys()].sort((a, b) => teamNo(a) - teamNo(b));
   roomKeys = [...byRoom.keys()].sort((a, b) => roomNum(a) - roomNum(b));
+  const seen = new Map();
+  for (const p of PEOPLE) seen.set(p.name, (seen.get(p.name) || 0) + 1);
+  dupNames = new Set([...seen].filter(([, n]) => n > 1).map(([nm]) => nm));
   try { myId = JSON.parse(localStorage.getItem(LS_ME)); } catch (e) {}
   if (!PEOPLE.some(p => p.seq === myId)) myId = null;
   paintMine();
@@ -421,10 +425,10 @@ function rowHTML(p, me, tagKind) {
   const tag = tagKind === "room"
     ? `<span class="tag g-room">${esc(p.roomNo)}</span>`
     : `<span class="tag g-team">${esc(p.team)}</span>`;
+  // 명단에는 이름만. 동명이인일 때만 학교명을 덧붙여 구분한다.
+  const sub = dupNames.has(p.name) ? `<span class="sub2">${esc(p.org)}</span>` : "";
   return `<a class="row${p.seq === me ? " me" : ""}" href="#" data-seq="${p.seq}">
-      <span class="idx">${p.seq}</span>
-      <span class="body"><span class="nm">${esc(p.name)}</span>
-        <span class="sub2">${esc(p.regionName)} · ${esc(p.org)}</span></span>
+      <span class="body"><span class="nm">${esc(p.name)}</span>${sub}</span>
       ${tag}</a>`;
 }
 
@@ -519,7 +523,7 @@ function paintOut(q, clearBtn) {
     out.innerHTML = `<p class="chooser-head"><em>‘${esc(q.trim())}’</em> 검색 결과 ${res.length}명 — 본인을 선택하세요</p>
       <div class="card">${res.map(p => `<button class="pick" type="button" data-seq="${p.seq}">
         <span class="nm">${esc(p.name)}</span>
-        <span class="sub2">${esc(p.regionName)} · ${esc(p.org)} · ${esc(p.team)} · ${esc(p.roomNo)}</span>
+        <span class="sub2">${esc(p.org)} · ${esc(p.team)} · ${esc(p.roomNo)}</span>
         <span class="go">›</span></button>`).join("")}</div>`;
   }
 }
@@ -546,8 +550,9 @@ function renderBrowse(mode) {
     </div>
     <div class="card">${keys.map(k => {
       const list = map.get(k);
-      const regions = [...new Set(list.map(p => p.regionName))].join(", ");
-      const who = isTeam ? `${list.length}명 · ${regions}` : `${regions} · ${[...new Set(list.map(p => p.team))].join(", ")}`;
+      const who = isTeam
+        ? `${list.length}명`
+        : [...new Set(list.map(p => p.team))].join(", ");
       return `<details><summary>${esc(k)} <span class="who">${esc(who)}</span></summary>
         <div class="det-body">${list.map(p => rowHTML(p, myId, isTeam ? "room" : "team")).join("")}</div></details>`;
     }).join("")}</div>
